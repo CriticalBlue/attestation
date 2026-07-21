@@ -118,6 +118,19 @@ func createAuthorizationList(authList *AuthorizationList) (*authorizationList, e
 		}
 	}
 
+	var blockModes []int
+	for _, blockMode := range authList.BlockMode {
+		blockModes = append(blockModes, int(blockMode))
+	}
+	al.BlockMode = blockModes
+
+	if authList.MlDsaVariant != nil {
+		al.MlDsaVariant, err = newAnyRawValue(*authList.MlDsaVariant, TagMlDsaVariant)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	al.RsaPublicExponent, err = newInt64RawValue(authList.RsaPublicExponent, TagRsaPublicExponent)
 	if err != nil {
 		return nil, err
@@ -147,6 +160,12 @@ func createAuthorizationList(authList *AuthorizationList) (*authorizationList, e
 	}
 	al.Digest = digests
 
+	var mgfDigests []int
+	for _, digest := range authList.MgfDigest {
+		mgfDigests = append(mgfDigests, int(digest))
+	}
+	al.MgfDigest = mgfDigests
+
 	var paddings []int
 	for _, padding := range authList.Padding {
 		paddings = append(paddings, int(padding))
@@ -154,6 +173,7 @@ func createAuthorizationList(authList *AuthorizationList) (*authorizationList, e
 	al.Padding = paddings
 
 	al.RollbackResistance = newBoolRawValue(authList.RollbackResistance, TagRollbackResistance)
+	al.EarlyBootOnly = newBoolRawValue(authList.EarlyBootOnly, TagEarlyBootOnly)
 	al.ActiveDateTime, err = newInt64RawValue(authList.ActiveDateTime, TagActiveDateTime)
 	if err != nil {
 		return nil, err
@@ -243,6 +263,13 @@ func createAuthorizationList(authList *AuthorizationList) (*authorizationList, e
 	if err != nil {
 		return nil, err
 	}
+	al.DeviceUniqueAttestation = newBoolRawValue(authList.DeviceUniqueAttestation, TagDeviceUniqueAttestation)
+	al.AttestationIdSecondImei = authList.AttestationIdSecondImei
+	al.ModuleHash = authList.ModuleHash
+	al.UsageCountLimit, err = newIntRawValue(authList.UsageCountLimit, TagUsageCountLimit)
+	if err != nil {
+		return nil, err
+	}
 
 	return &al, nil
 }
@@ -324,7 +351,6 @@ func parseAuthorizationList(derBytes []byte) (*authorizationList, error) {
 	}
 	return &authList, nil
 }
-
 func newAuthorizationList(in *authorizationList) (*AuthorizationList, error) {
 	var out = &AuthorizationList{}
 	var err error
@@ -347,6 +373,12 @@ func newAuthorizationList(in *authorizationList) (*AuthorizationList, error) {
 		out.EcCurve = v
 	}
 
+	if v, err := newOptionnalInt(in.MlDsaVariant); err != nil {
+		return nil, err
+	} else if v != nil {
+		out.MlDsaVariant = v
+	}
+
 	out.RsaPublicExponent, err = newOptionnalInt64(in.RsaPublicExponent)
 	if err != nil {
 		return nil, err
@@ -356,8 +388,16 @@ func newAuthorizationList(in *authorizationList) (*AuthorizationList, error) {
 		return nil, err
 	}
 
+	for _, blockMode := range in.BlockMode {
+		out.BlockMode = append(out.BlockMode, BlockMode(blockMode))
+	}
+
 	for _, d := range in.Digest {
 		out.Digest = append(out.Digest, Digest(d))
+	}
+
+	for _, d := range in.MgfDigest {
+		out.MgfDigest = append(out.MgfDigest, Digest(d))
 	}
 
 	for _, m := range in.Padding {
@@ -369,6 +409,7 @@ func newAuthorizationList(in *authorizationList) (*AuthorizationList, error) {
 	}
 
 	out.RollbackResistance = isNullType(in.RollbackResistance)
+	out.EarlyBootOnly = isNullType(in.EarlyBootOnly)
 	out.ActiveDateTime, err = newOptionnalInt64(in.ActiveDateTime)
 	if err != nil {
 		return nil, err
@@ -378,6 +419,10 @@ func newAuthorizationList(in *authorizationList) (*AuthorizationList, error) {
 		return nil, err
 	}
 	out.UsageExpireDateTime, err = newOptionnalInt64(in.UsageExpireDateTime)
+	if err != nil {
+		return nil, err
+	}
+	out.UsageCountLimit, err = newOptionnalInt(in.UsageCountLimit)
 	if err != nil {
 		return nil, err
 	}
@@ -470,8 +515,81 @@ func newAuthorizationList(in *authorizationList) (*AuthorizationList, error) {
 	if err != nil {
 		return nil, err
 	}
+	out.DeviceUniqueAttestation = isNullType(in.DeviceUniqueAttestation)
+	out.AttestationIdSecondImei = in.AttestationIdSecondImei
+	out.ModuleHash = in.ModuleHash
+
+	if err := populateMissingAuthorizationListFields(in, out); err != nil {
+		return nil, err
+	}
 
 	return out, nil
+}
+
+func populateMissingAuthorizationListFields(in *authorizationList, out *AuthorizationList) error {
+	var rawValues []asn1.RawValue
+	if _, err := asn1.Unmarshal(in.Raw, &rawValues); err != nil {
+		return err
+	}
+
+	for _, raw := range rawValues {
+		switch raw.Tag {
+		case TagAttestationIdBrand:
+			if len(out.AttestationIdBrand) == 0 {
+				out.AttestationIdBrand = append([]byte(nil), raw.Bytes...)
+			}
+		case TagAttestationIdDevice:
+			if len(out.AttestationIdDevice) == 0 {
+				out.AttestationIdDevice = append([]byte(nil), raw.Bytes...)
+			}
+		case TagAttestationIdProduct:
+			if len(out.AttestationIdProduct) == 0 {
+				out.AttestationIdProduct = append([]byte(nil), raw.Bytes...)
+			}
+		case TagAttestationIdSerial:
+			if len(out.AttestationIdSerial) == 0 {
+				out.AttestationIdSerial = append([]byte(nil), raw.Bytes...)
+			}
+		case TagAttestationIdImei:
+			if len(out.AttestationIdImei) == 0 {
+				out.AttestationIdImei = append([]byte(nil), raw.Bytes...)
+			}
+		case TagAttestationIdMeid:
+			if len(out.AttestationIdMeid) == 0 {
+				out.AttestationIdMeid = append([]byte(nil), raw.Bytes...)
+			}
+		case TagAttestationIdManufacturer:
+			if len(out.AttestationIdManufacturer) == 0 {
+				out.AttestationIdManufacturer = append([]byte(nil), raw.Bytes...)
+			}
+		case TagAttestationIdModel:
+			if len(out.AttestationIdModel) == 0 {
+				out.AttestationIdModel = append([]byte(nil), raw.Bytes...)
+			}
+		case TagAttestationIdSecondImei:
+			if len(out.AttestationIdSecondImei) == 0 {
+				out.AttestationIdSecondImei = append([]byte(nil), raw.Bytes...)
+			}
+		case TagModuleHash:
+			if len(out.ModuleHash) == 0 {
+				out.ModuleHash = append([]byte(nil), raw.Bytes...)
+			}
+		case TagDeviceUniqueAttestation:
+			if !out.DeviceUniqueAttestation {
+				out.DeviceUniqueAttestation = bytes.Equal(raw.Bytes, asn1.NullBytes)
+			}
+		case TagUsageCountLimit:
+			if out.UsageCountLimit == nil {
+				limit, err := newOptionnalInt(raw)
+				if err != nil {
+					return err
+				}
+				out.UsageCountLimit = limit
+			}
+		}
+	}
+
+	return nil
 }
 
 func parseKeyDescription(in *keyDescription) (*KeyDescription, error) {
