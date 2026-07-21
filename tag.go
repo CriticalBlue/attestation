@@ -46,8 +46,8 @@ const (
 	TagVendorPatchLevel            = 718 // Present only in key attestation versions >= 3. // Corresponds to the Tag::VENDOR_PATCHLEVEL authorization tag, which uses a tag ID value of 718. // Specifies the vendor image security patch level that must be installed on the device for this key to be used. The value appears in the form YYYYMMDD, representing the date of the vendor security patch. For example, if a key were generated on an Android device with the vendor's August 1, 2018 security patch installed, this value would be 20180801.
 	TagBootPatchLevel              = 719 // Present only in key attestation versions >= 3. // Corresponds to the Tag::BOOT_PATCHLEVEL authorization tag, which uses a tag ID value of 719. // Specifies the kernel image security patch level that must be installed on the device for this key to be used. The value appears in the form YYYYMMDD, representing the date of the system security patch. For example, if a key were generated on an Android device with the system's August 5, 2018 security patch installed, this value would be 20180805.
 	TagDeviceUniqueAttestation     = 720 // Present only in key attestation versions >= 4. // Corresponds to the Tag::DEVICE_UNIQUE_ATTESTATION authorization tag, which uses a tag ID value of 720.
-	TagAttestationIdSecondImei     = 723 // Present only in key attestation versions >= 500. // Corresponds to the Tag::ATTESTATION_ID_SECOND_IMEI authorization tag, which uses a tag ID value of 723.
-	TagModuleHash                  = 724 // Present only in key attestation versions >= 500. // Corresponds to the Tag::MODULE_HASH authorization tag, which uses a tag ID value of 724.
+	TagAttestationIdSecondImei     = 723 // Present only in key attestation versions >= 300. // Corresponds to the Tag::ATTESTATION_ID_SECOND_IMEI authorization tag, which uses a tag ID value of 723.
+	TagModuleHash                  = 724 // Present only in key attestation versions >= 400. // Corresponds to the Tag::MODULE_HASH authorization tag, which uses a tag ID value of 724.
 )
 
 // RootOfTrust
