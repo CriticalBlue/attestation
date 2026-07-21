@@ -533,47 +533,18 @@ func populateMissingAuthorizationListFields(in *authorizationList, out *Authoriz
 	}
 
 	for _, raw := range rawValues {
+		if field := octetStringFieldForTag(raw.Tag, out); field != nil {
+			if len(*field) == 0 {
+				decoded, err := decodeOctetString(raw)
+				if err != nil {
+					return err
+				}
+				*field = decoded
+			}
+			continue
+		}
+
 		switch raw.Tag {
-		case TagAttestationIdBrand:
-			if len(out.AttestationIdBrand) == 0 {
-				out.AttestationIdBrand = append([]byte(nil), raw.Bytes...)
-			}
-		case TagAttestationIdDevice:
-			if len(out.AttestationIdDevice) == 0 {
-				out.AttestationIdDevice = append([]byte(nil), raw.Bytes...)
-			}
-		case TagAttestationIdProduct:
-			if len(out.AttestationIdProduct) == 0 {
-				out.AttestationIdProduct = append([]byte(nil), raw.Bytes...)
-			}
-		case TagAttestationIdSerial:
-			if len(out.AttestationIdSerial) == 0 {
-				out.AttestationIdSerial = append([]byte(nil), raw.Bytes...)
-			}
-		case TagAttestationIdImei:
-			if len(out.AttestationIdImei) == 0 {
-				out.AttestationIdImei = append([]byte(nil), raw.Bytes...)
-			}
-		case TagAttestationIdMeid:
-			if len(out.AttestationIdMeid) == 0 {
-				out.AttestationIdMeid = append([]byte(nil), raw.Bytes...)
-			}
-		case TagAttestationIdManufacturer:
-			if len(out.AttestationIdManufacturer) == 0 {
-				out.AttestationIdManufacturer = append([]byte(nil), raw.Bytes...)
-			}
-		case TagAttestationIdModel:
-			if len(out.AttestationIdModel) == 0 {
-				out.AttestationIdModel = append([]byte(nil), raw.Bytes...)
-			}
-		case TagAttestationIdSecondImei:
-			if len(out.AttestationIdSecondImei) == 0 {
-				out.AttestationIdSecondImei = append([]byte(nil), raw.Bytes...)
-			}
-		case TagModuleHash:
-			if len(out.ModuleHash) == 0 {
-				out.ModuleHash = append([]byte(nil), raw.Bytes...)
-			}
 		case TagDeviceUniqueAttestation:
 			if !out.DeviceUniqueAttestation {
 				out.DeviceUniqueAttestation = bytes.Equal(raw.Bytes, asn1.NullBytes)
@@ -590,6 +561,41 @@ func populateMissingAuthorizationListFields(in *authorizationList, out *Authoriz
 	}
 
 	return nil
+}
+
+func octetStringFieldForTag(tag int, out *AuthorizationList) *[]byte {
+	switch tag {
+	case TagAttestationIdBrand:
+		return &out.AttestationIdBrand
+	case TagAttestationIdDevice:
+		return &out.AttestationIdDevice
+	case TagAttestationIdProduct:
+		return &out.AttestationIdProduct
+	case TagAttestationIdSerial:
+		return &out.AttestationIdSerial
+	case TagAttestationIdImei:
+		return &out.AttestationIdImei
+	case TagAttestationIdMeid:
+		return &out.AttestationIdMeid
+	case TagAttestationIdManufacturer:
+		return &out.AttestationIdManufacturer
+	case TagAttestationIdModel:
+		return &out.AttestationIdModel
+	case TagAttestationIdSecondImei:
+		return &out.AttestationIdSecondImei
+	case TagModuleHash:
+		return &out.ModuleHash
+	default:
+		return nil
+	}
+}
+
+func decodeOctetString(raw asn1.RawValue) ([]byte, error) {
+	var b []byte
+	if _, err := asn1.Unmarshal(raw.Bytes, &b); err != nil {
+		return nil, err
+	}
+	return append([]byte(nil), b...), nil
 }
 
 func parseKeyDescription(in *keyDescription) (*KeyDescription, error) {

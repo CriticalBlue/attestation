@@ -259,7 +259,11 @@ func printAuthorizationList(printer *printer, in attestation.AuthorizationList) 
 		printer.Printf("KeySize: %v\n", v)
 	}
 	if _, ok := isNotEmpty(in.BlockMode); ok {
-		printer.Printf("BlockMode: %v\n", in.BlockMode)
+		blockModes := make([]int, 0, len(in.BlockMode))
+		for _, m := range in.BlockMode {
+			blockModes = append(blockModes, int(m))
+		}
+		printer.Printf("BlockMode: %v\n", blockModes)
 	}
 	if _, ok := isNotEmpty(in.Digest); ok {
 		printer.Printf("Digest: %v\n", in.Digest)
