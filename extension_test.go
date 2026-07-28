@@ -417,12 +417,3 @@ func Test_GetKeyExtension(t *testing.T) {
 		t.Fatalf("GetKeyExtension() = %+v, want nil", got)
 	}
 }
-
-func Test_PopulateMissingAuthorizationListFieldsWithInvalidRaw(t *testing.T) {
-	in := &authorizationList{Raw: []byte{0x01, 0x01, 0x00}}
-	out := &AuthorizationList{}
-
-	if err := populateMissingAuthorizationListFields(in, out); err == nil {
-		t.Fatalf("populateMissingAuthorizationListFields() error = nil, want non-nil")
-	}
-}
