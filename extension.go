@@ -124,11 +124,9 @@ func createAuthorizationList(authList *AuthorizationList) (*authorizationList, e
 	}
 	al.BlockMode = blockModes
 
-	if authList.MlDsaVariant != nil {
-		al.MlDsaVariant, err = newAnyRawValue(*authList.MlDsaVariant, TagMlDsaVariant)
-		if err != nil {
-			return nil, err
-		}
+	al.MlDsaVariant, err = newAnyRawValue(authList.MlDsaVariant, TagMlDsaVariant)
+	if err != nil {
+		return nil, err
 	}
 
 	al.RsaPublicExponent, err = newInt64RawValue(authList.RsaPublicExponent, TagRsaPublicExponent)
@@ -373,10 +371,9 @@ func newAuthorizationList(in *authorizationList) (*AuthorizationList, error) {
 		out.EcCurve = v
 	}
 
-	if v, err := newOptionnalInt(in.MlDsaVariant); err != nil {
+	out.MlDsaVariant, err = newOptionnalInt(in.MlDsaVariant)
+	if err != nil {
 		return nil, err
-	} else if v != nil {
-		out.MlDsaVariant = v
 	}
 
 	out.RsaPublicExponent, err = newOptionnalInt64(in.RsaPublicExponent)
