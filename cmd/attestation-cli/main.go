@@ -258,8 +258,18 @@ func printAuthorizationList(printer *printer, in attestation.AuthorizationList) 
 	if v, ok := isNotEmpty(in.KeySize); ok {
 		printer.Printf("KeySize: %v\n", v)
 	}
+	if _, ok := isNotEmpty(in.BlockMode); ok {
+		blockModes := make([]int, 0, len(in.BlockMode))
+		for _, m := range in.BlockMode {
+			blockModes = append(blockModes, int(m))
+		}
+		printer.Printf("BlockMode: %v\n", blockModes)
+	}
 	if _, ok := isNotEmpty(in.Digest); ok {
 		printer.Printf("Digest: %v\n", in.Digest)
+	}
+	if _, ok := isNotEmpty(in.MgfDigest); ok {
+		printer.Printf("MgfDigest: %v\n", in.MgfDigest)
 	}
 	if _, ok := isNotEmpty(in.Padding); ok {
 		printer.Printf("Padding: %v\n", in.Padding)
@@ -267,11 +277,17 @@ func printAuthorizationList(printer *printer, in attestation.AuthorizationList) 
 	if v, ok := isNotEmpty(in.EcCurve); ok {
 		printer.Printf("EcCurve: %v (%d)\n", v, v)
 	}
+	if v, ok := isNotEmpty(in.MlDsaVariant); ok {
+		printer.Printf("MlDsaVariant: %v\n", v)
+	}
 	if v, ok := isNotEmpty(in.RsaPublicExponent); ok {
 		printer.Printf("RsaPublicExponent: %v\n", v)
 	}
 	if _, ok := isNotEmpty(in.RollbackResistance); ok {
 		printer.Printf("RollbackResistance: %t\n", in.RollbackResistance)
+	}
+	if _, ok := isNotEmpty(in.EarlyBootOnly); ok {
+		printer.Printf("EarlyBootOnly: %t\n", in.EarlyBootOnly)
 	}
 	if _, ok := isNotEmpty(in.ActiveDateTime); ok {
 		printer.Printf("ActiveDateTime: %v\n", in.ActiveDateTime)
@@ -281,6 +297,9 @@ func printAuthorizationList(printer *printer, in attestation.AuthorizationList) 
 	}
 	if _, ok := isNotEmpty(in.UsageExpireDateTime); ok {
 		printer.Printf("UsageExpireDateTime: %v\n", in.UsageExpireDateTime)
+	}
+	if v, ok := isNotEmpty(in.UsageCountLimit); ok {
+		printer.Printf("UsageCountLimit: %v\n", v)
 	}
 	if _, ok := isNotEmpty(in.NoAuthRequired); ok {
 		printer.Printf("NoAuthRequired: %t\n", in.NoAuthRequired)
@@ -365,6 +384,15 @@ func printAuthorizationList(printer *printer, in attestation.AuthorizationList) 
 	}
 	if v, ok := isNotEmpty(in.BootPatchLevel); ok {
 		printer.Printf("BootPatchLevel: %v\n", v)
+	}
+	if _, ok := isNotEmpty(in.DeviceUniqueAttestation); ok {
+		printer.Printf("DeviceUniqueAttestation: %t\n", in.DeviceUniqueAttestation)
+	}
+	if _, ok := isNotEmpty(in.AttestationIdSecondImei); ok {
+		printer.Printf("AttestationIdSecondImei: %s\n", in.AttestationIdSecondImei)
+	}
+	if _, ok := isNotEmpty(in.ModuleHash); ok {
+		printer.Printf("ModuleHash: %x\n", in.ModuleHash)
 	}
 }
 

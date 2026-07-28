@@ -2,6 +2,7 @@ package attestation
 
 import (
 	"encoding/asn1"
+	"fmt"
 )
 
 // OIDKeyAttestationExtension is the key attestation extension.
@@ -67,8 +68,12 @@ func (v AttestationVersion) String() string {
 		return "KeyMint version 2.0"
 	case KAKeyMintVersion3:
 		return "KeyMint version 3.0"
+	case KAKeyMintVersion4:
+		return "KeyMint version 4.0"
+	case KAKeyMintVersion5:
+		return "KeyMint version 5.0"
 	default:
-		return ""
+		return fmt.Sprintf("%d", v)
 	}
 }
 
@@ -80,6 +85,8 @@ const (
 	KAKeyMintVersion1    = 100                         // KeyMint version 1.0
 	KAKeyMintVersion2    = 200                         // KeyMint version 2.0
 	KAKeyMintVersion3    = 300                         // KeyMint version 3.0
+	KAKeyMintVersion4    = 400                         // KeyMint version 4.0
+	KAKeyMintVersion5    = 500                         // KeyMint version 5.0
 )
 
 // KeymasterVersion is the version of the Keymaster or KeyMint hardware abstraction layer.
@@ -106,6 +113,10 @@ func (v KeymasterVersion) String() string {
 		return "KeyMint version 2.0"
 	case KeyMintVersion3:
 		return "KeyMint version 3.0"
+	case KeyMintVersion4:
+		return "KeyMint version 4.0"
+	case KeyMintVersion5:
+		return "KeyMint version 5.0"
 	default:
 		return ""
 	}
@@ -121,6 +132,8 @@ const (
 	KeyMintVersion1    = 100                   // KeyMint version 1.0
 	KeyMintVersion2    = 200                   // KeyMint version 2.0
 	KeyMintVersion3    = 300                   // KeyMint version 3.0
+	KeyMintVersion4    = 400                   // KeyMint version 4.0
+	KeyMintVersion5    = 500                   // KeyMint version 5.0
 )
 
 // SecurityLevel reflects the ASN.1 data structure for SecurityLevel.
@@ -157,14 +170,19 @@ const (
 //		purpose                     [1] EXPLICIT SET OF INTEGER OPTIONAL,
 //		algorithm                   [2] EXPLICIT INTEGER OPTIONAL,
 //		keySize                     [3] EXPLICIT INTEGER OPTIONAL.
+//		blockMode                   [4] EXPLICIT SET OF INTEGER OPTIONAL,
 //		digest                      [5] EXPLICIT SET OF INTEGER OPTIONAL,
 //		padding                     [6] EXPLICIT SET OF INTEGER OPTIONAL,
 //		ecCurve                     [10] EXPLICIT INTEGER OPTIONAL,
+//		mlDsaVariant                [11] EXPLICIT INTEGER OPTIONAL,
 //		rsaPublicExponent           [200] EXPLICIT INTEGER OPTIONAL,
+//		mgfDigest                   [203] EXPLICIT SET OF INTEGER OPTIONAL,
 //		rollbackResistance          [303] EXPLICIT NULL OPTIONAL, # KM4
+//		earlyBootOnly               [305] EXPLICIT NULL OPTIONAL, # KM4
 //		activeDateTime              [400] EXPLICIT INTEGER OPTIONAL
 //		originationExpireDateTime   [401] EXPLICIT INTEGER OPTIONAL
 //		usageExpireDateTime         [402] EXPLICIT INTEGER OPTIONAL
+//		usageCountLimit             [405] EXPLICIT INTEGER OPTIONAL, # KM4
 //		noAuthRequired              [503] EXPLICIT NULL OPTIONAL,
 //		userAuthType                [504] EXPLICIT INTEGER OPTIONAL,
 //		authTimeout                 [505] EXPLICIT INTEGER OPTIONAL,
@@ -191,46 +209,57 @@ const (
 //		attestationIdModel          [717] EXPLICIT OCTET_STRING OPTIONAL, # KM3
 //		vendorPatchLevel            [718] EXPLICIT INTEGER OPTIONAL, # KM4
 //		bootPatchLevel              [719] EXPLICIT INTEGER OPTIONAL, # KM4
+//		deviceUniqueAttestation     [720] EXPLICIT NULL OPTIONAL, # KM4
+//		attestationIdSecondImei     [723] EXPLICIT OCTET_STRING OPTIONAL, # KM5
+//		moduleHash                  [724] EXPLICIT OCTET_STRING OPTIONAL, # KM5
 //	}
 type authorizationList struct {
 	Raw                         asn1.RawContent
-	Purpose                     []int32         `asn1:"explicit,optional,omitempty,set,tag:1"` // [1] EXPLICIT SET OF INTEGER OPTIONAL,
-	Algorithm                   asn1.RawValue   `asn1:"explicit,optional,tag:2"`               // [2] EXPLICIT INTEGER OPTIONAL,
-	KeySize                     asn1.RawValue   `asn1:"explicit,optional,tag:3"`               // [3] EXPLICIT INTEGER OPTIONAL.
-	Digest                      []int           `asn1:"explicit,optional,omitempty,set,tag:5"` // [5] EXPLICIT SET OF INTEGER OPTIONAL,
-	Padding                     []int           `asn1:"explicit,optional,omitempty,set,tag:6"` // [6] EXPLICIT SET OF INTEGER OPTIONAL,
-	EcCurve                     asn1.RawValue   `asn1:"explicit,optional,tag:10"`              // [10] EXPLICIT INTEGER OPTIONAL,
-	RsaPublicExponent           asn1.RawValue   `asn1:"explicit,optional,tag:200"`             // [200] EXPLICIT INTEGER OPTIONAL,
-	RollbackResistance          asn1.RawValue   `asn1:"explicit,optional,tag:303"`             // [303] EXPLICIT NULL OPTIONAL, # KM4
-	ActiveDateTime              asn1.RawValue   `asn1:"explicit,optional,tag:400"`             // [400] EXPLICIT INTEGER OPTIONAL
-	OriginationExpireDateTime   asn1.RawValue   `asn1:"explicit,optional,tag:401"`             // [401] EXPLICIT INTEGER OPTIONAL
-	UsageExpireDateTime         asn1.RawValue   `asn1:"explicit,optional,tag:402"`             // [402] EXPLICIT INTEGER OPTIONAL
-	NoAuthRequired              asn1.RawValue   `asn1:"explicit,optional,tag:503"`             // [503] EXPLICIT NULL OPTIONAL,
-	UserAuthType                asn1.RawValue   `asn1:"explicit,optional,tag:504"`             // [504] EXPLICIT INTEGER OPTIONAL,
-	AuthTimeout                 asn1.RawValue   `asn1:"explicit,optional,tag:505"`             // [505] EXPLICIT INTEGER OPTIONAL,
-	AllowWhileOnBody            asn1.RawValue   `asn1:"explicit,optional,tag:506"`             // [506] EXPLICIT NULL OPTIONAL,
-	TrustedUserPresenceRequired asn1.RawValue   `asn1:"explicit,optional,tag:507"`             // [507] EXPLICIT NULL OPTIONAL, # KM4
-	TrustedConfirmationRequired asn1.RawValue   `asn1:"explicit,optional,tag:508"`             // [508] EXPLICIT NULL OPTIONAL, # KM4
-	UnlockedDeviceRequired      asn1.RawValue   `asn1:"explicit,optional,tag:509"`             // [509] EXPLICIT NULL OPTIONAL, # KM4
-	AllApplications             asn1.RawValue   `asn1:"explicit,optional,tag:600"`             // [600] EXPLICIT NULL OPTIONAL,
-	ApplicationId               []byte          `asn1:"explicit,optional,omitempty,tag:601"`   // [601] EXPLICIT OCTET_STRING OPTIONAL,
-	CreationDateTime            asn1.RawValue   `asn1:"explicit,optional,tag:701"`             // [701] EXPLICIT INTEGER OPTIONAL,
-	Origin                      asn1.RawValue   `asn1:"explicit,optional,tag:702"`             // [702] EXPLICIT INTEGER OPTIONAL,
-	RollbackResistant           asn1.RawValue   `asn1:"explicit,optional,tag:703"`             // [703] EXPLICIT NULL OPTIONAL, # KM2 and KM3 only.
-	RootOfTrust                 asn1.RawValue   `asn1:"explicit,optional,tag:704"`             // [704] EXPLICIT RootOfTrust OPTIONAL,
-	OsVersion                   asn1.RawValue   `asn1:"explicit,optional,tag:705"`             // [705] EXPLICIT INTEGER OPTIONAL,
-	OsPatchLevel                asn1.RawValue   `asn1:"explicit,optional,tag:706"`             // [706] EXPLICIT INTEGER OPTIONAL,
-	AttestationApplicationId    asn1.RawContent `asn1:"explicit,optional,tag:709"`             // [709] EXPLICIT OCTET_STRING OPTIONAL, # KM3
-	AttestationIdBrand          []byte          `asn1:"explicit,optional,omitempty,tag:710"`   // [710] EXPLICIT OCTET_STRING OPTIONAL, # KM3
-	AttestationIdDevice         []byte          `asn1:"explicit,optional,omitempty,tag:711"`   // [711] EXPLICIT OCTET_STRING OPTIONAL, # KM3
-	AttestationIdProduct        []byte          `asn1:"explicit,optional,omitempty,tag:712"`   // [712] EXPLICIT OCTET_STRING OPTIONAL, # KM3
-	AttestationIdSerial         []byte          `asn1:"explicit,optional,omitempty,tag:713"`   // [713] EXPLICIT OCTET_STRING OPTIONAL, # KM3
-	AttestationIdImei           []byte          `asn1:"explicit,optional,omitempty,tag:714"`   // [714] EXPLICIT OCTET_STRING OPTIONAL, # KM3
-	AttestationIdMeid           []byte          `asn1:"explicit,optional,omitempty,tag:715"`   // [715] EXPLICIT OCTET_STRING OPTIONAL, # KM3
-	AttestationIdManufacturer   []byte          `asn1:"explicit,optional,omitempty,tag:716"`   // [716] EXPLICIT OCTET_STRING OPTIONAL, # KM3
-	AttestationIdModel          []byte          `asn1:"explicit,optional,omitempty,tag:717"`   // [717] EXPLICIT OCTET_STRING OPTIONAL, # KM3
-	VendorPatchLevel            asn1.RawValue   `asn1:"explicit,optional,tag:718"`             // [718] EXPLICIT INTEGER OPTIONAL, # KM4
-	BootPatchLevel              asn1.RawValue   `asn1:"explicit,optional,tag:719"`             // [719] EXPLICIT INTEGER OPTIONAL, # KM4
+	Purpose                     []int32         `asn1:"explicit,optional,omitempty,set,tag:1"`   // [1] EXPLICIT SET OF INTEGER OPTIONAL,
+	Algorithm                   asn1.RawValue   `asn1:"explicit,optional,tag:2"`                 // [2] EXPLICIT INTEGER OPTIONAL,
+	KeySize                     asn1.RawValue   `asn1:"explicit,optional,tag:3"`                 // [3] EXPLICIT INTEGER OPTIONAL.
+	BlockMode                   []int           `asn1:"explicit,optional,omitempty,set,tag:4"`   // [4] EXPLICIT SET OF INTEGER OPTIONAL,
+	Digest                      []int           `asn1:"explicit,optional,omitempty,set,tag:5"`   // [5] EXPLICIT SET OF INTEGER OPTIONAL,
+	Padding                     []int           `asn1:"explicit,optional,omitempty,set,tag:6"`   // [6] EXPLICIT SET OF INTEGER OPTIONAL,
+	EcCurve                     asn1.RawValue   `asn1:"explicit,optional,tag:10"`                // [10] EXPLICIT INTEGER OPTIONAL,
+	MlDsaVariant                asn1.RawValue   `asn1:"explicit,optional,tag:11"`                // [11] EXPLICIT INTEGER OPTIONAL,
+	RsaPublicExponent           asn1.RawValue   `asn1:"explicit,optional,tag:200"`               // [200] EXPLICIT INTEGER OPTIONAL,
+	MgfDigest                   []int           `asn1:"explicit,optional,omitempty,set,tag:203"` // [203] EXPLICIT SET OF INTEGER OPTIONAL,
+	RollbackResistance          asn1.RawValue   `asn1:"explicit,optional,tag:303"`               // [303] EXPLICIT NULL OPTIONAL, # KM4
+	EarlyBootOnly               asn1.RawValue   `asn1:"explicit,optional,tag:305"`               // [305] EXPLICIT NULL OPTIONAL, # KM4
+	ActiveDateTime              asn1.RawValue   `asn1:"explicit,optional,tag:400"`               // [400] EXPLICIT INTEGER OPTIONAL
+	OriginationExpireDateTime   asn1.RawValue   `asn1:"explicit,optional,tag:401"`               // [401] EXPLICIT INTEGER OPTIONAL
+	UsageExpireDateTime         asn1.RawValue   `asn1:"explicit,optional,tag:402"`               // [402] EXPLICIT INTEGER OPTIONAL
+	UsageCountLimit             asn1.RawValue   `asn1:"explicit,optional,tag:405"`               // [405] EXPLICIT INTEGER OPTIONAL, # KM4
+	NoAuthRequired              asn1.RawValue   `asn1:"explicit,optional,tag:503"`               // [503] EXPLICIT NULL OPTIONAL,
+	UserAuthType                asn1.RawValue   `asn1:"explicit,optional,tag:504"`               // [504] EXPLICIT INTEGER OPTIONAL,
+	AuthTimeout                 asn1.RawValue   `asn1:"explicit,optional,tag:505"`               // [505] EXPLICIT INTEGER OPTIONAL,
+	AllowWhileOnBody            asn1.RawValue   `asn1:"explicit,optional,tag:506"`               // [506] EXPLICIT NULL OPTIONAL,
+	TrustedUserPresenceRequired asn1.RawValue   `asn1:"explicit,optional,tag:507"`               // [507] EXPLICIT NULL OPTIONAL, # KM4
+	TrustedConfirmationRequired asn1.RawValue   `asn1:"explicit,optional,tag:508"`               // [508] EXPLICIT NULL OPTIONAL, # KM4
+	UnlockedDeviceRequired      asn1.RawValue   `asn1:"explicit,optional,tag:509"`               // [509] EXPLICIT NULL OPTIONAL, # KM4
+	AllApplications             asn1.RawValue   `asn1:"explicit,optional,tag:600"`               // [600] EXPLICIT NULL OPTIONAL,
+	ApplicationId               []byte          `asn1:"explicit,optional,omitempty,tag:601"`     // [601] EXPLICIT OCTET_STRING OPTIONAL,
+	CreationDateTime            asn1.RawValue   `asn1:"explicit,optional,tag:701"`               // [701] EXPLICIT INTEGER OPTIONAL,
+	Origin                      asn1.RawValue   `asn1:"explicit,optional,tag:702"`               // [702] EXPLICIT INTEGER OPTIONAL,
+	RollbackResistant           asn1.RawValue   `asn1:"explicit,optional,tag:703"`               // [703] EXPLICIT NULL OPTIONAL, # KM2 and KM3 only.
+	RootOfTrust                 asn1.RawValue   `asn1:"explicit,optional,tag:704"`               // [704] EXPLICIT RootOfTrust OPTIONAL,
+	OsVersion                   asn1.RawValue   `asn1:"explicit,optional,tag:705"`               // [705] EXPLICIT INTEGER OPTIONAL,
+	OsPatchLevel                asn1.RawValue   `asn1:"explicit,optional,tag:706"`               // [706] EXPLICIT INTEGER OPTIONAL,
+	AttestationApplicationId    asn1.RawContent `asn1:"explicit,optional,tag:709"`               // [709] EXPLICIT OCTET_STRING OPTIONAL, # KM3
+	AttestationIdBrand          []byte          `asn1:"explicit,optional,omitempty,tag:710"`     // [710] EXPLICIT OCTET_STRING OPTIONAL, # KM3
+	AttestationIdDevice         []byte          `asn1:"explicit,optional,omitempty,tag:711"`     // [711] EXPLICIT OCTET_STRING OPTIONAL, # KM3
+	AttestationIdProduct        []byte          `asn1:"explicit,optional,omitempty,tag:712"`     // [712] EXPLICIT OCTET_STRING OPTIONAL, # KM3
+	AttestationIdSerial         []byte          `asn1:"explicit,optional,omitempty,tag:713"`     // [713] EXPLICIT OCTET_STRING OPTIONAL, # KM3
+	AttestationIdImei           []byte          `asn1:"explicit,optional,omitempty,tag:714"`     // [714] EXPLICIT OCTET_STRING OPTIONAL, # KM3
+	AttestationIdMeid           []byte          `asn1:"explicit,optional,omitempty,tag:715"`     // [715] EXPLICIT OCTET_STRING OPTIONAL, # KM3
+	AttestationIdManufacturer   []byte          `asn1:"explicit,optional,omitempty,tag:716"`     // [716] EXPLICIT OCTET_STRING OPTIONAL, # KM3
+	AttestationIdModel          []byte          `asn1:"explicit,optional,omitempty,tag:717"`     // [717] EXPLICIT OCTET_STRING OPTIONAL, # KM3
+	VendorPatchLevel            asn1.RawValue   `asn1:"explicit,optional,tag:718"`               // [718] EXPLICIT INTEGER OPTIONAL, # KM4
+	BootPatchLevel              asn1.RawValue   `asn1:"explicit,optional,tag:719"`               // [719] EXPLICIT INTEGER OPTIONAL, # KM4
+	DeviceUniqueAttestation     asn1.RawValue   `asn1:"explicit,optional,tag:720"`               // [720] EXPLICIT NULL OPTIONAL, # KM4
+	AttestationIdSecondImei     []byte          `asn1:"explicit,optional,omitempty,tag:723"`     // [723] EXPLICIT OCTET_STRING OPTIONAL, # KM5
+	ModuleHash                  []byte          `asn1:"explicit,optional,omitempty,tag:724"`     // [724] EXPLICIT OCTET_STRING OPTIONAL, # KM5
 }
 
 // AuthorizationList reflects the key pair's properties as defined in the Keymaster or KeyMint
@@ -240,14 +269,19 @@ type AuthorizationList struct {
 	Purpose                     []KeyPurpose
 	Algorithm                   *Algorithm
 	KeySize                     *int
+	BlockMode                   []BlockMode
 	Digest                      []Digest
 	Padding                     []PaddingMode
 	EcCurve                     *EcCurve
+	MlDsaVariant                *int
 	RsaPublicExponent           *int64
+	MgfDigest                   []Digest
 	RollbackResistance          bool
+	EarlyBootOnly               bool
 	ActiveDateTime              *int64
 	OriginationExpireDateTime   *int
 	UsageExpireDateTime         *int64
+	UsageCountLimit             *int
 	NoAuthRequired              bool
 	UserAuthType                *HardwareAuthenticatorType
 	AuthTimeout                 *int32
@@ -274,6 +308,9 @@ type AuthorizationList struct {
 	AttestationIdModel          []byte
 	VendorPatchLevel            *int
 	BootPatchLevel              *int
+	DeviceUniqueAttestation     bool
+	AttestationIdSecondImei     []byte
+	ModuleHash                  []byte
 }
 
 // RootOfTrust reflects the ASN.1 data structure for RootOfTrust.

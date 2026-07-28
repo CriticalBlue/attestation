@@ -1,6 +1,7 @@
 package attestation
 
 import (
+	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/asn1"
 	"reflect"
@@ -396,5 +397,23 @@ func Test_readASN1Boolean(t *testing.T) {
 				t.Errorf("readASN1Boolean() = %v, want %v", *tt.args.out, tt.want.out)
 			}
 		})
+	}
+}
+
+func Test_GetKeyExtension(t *testing.T) {
+	ext := pkix.Extension{Id: OIDKeyAttestationExtension, Value: []byte{0x01}}
+	crt := &x509.Certificate{Extensions: []pkix.Extension{ext}}
+
+	got := GetKeyExtension(crt)
+	if got == nil {
+		t.Fatalf("GetKeyExtension() = nil, want extension")
+	}
+	if !reflect.DeepEqual(*got, ext) {
+		t.Fatalf("GetKeyExtension() = %+v, want %+v", *got, ext)
+	}
+
+	missing := &x509.Certificate{Extensions: []pkix.Extension{{Id: asn1.ObjectIdentifier{1, 2, 3}}}}
+	if got := GetKeyExtension(missing); got != nil {
+		t.Fatalf("GetKeyExtension() = %+v, want nil", got)
 	}
 }

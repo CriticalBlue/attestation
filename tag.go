@@ -6,9 +6,11 @@ const (
 	TagPurpose                     = 1   // Corresponds to the Tag::PURPOSE authorization tag, which uses a tag ID value of 1.
 	TagAlgorithm                   = 2   // Corresponds to the Tag::ALGORITHM authorization tag, which uses a tag ID value of 2. // In an attestation AuthorizationList object, the algorithm value is always RSA or EC.
 	TagKeySize                     = 3   // Corresponds to the Tag::KEY_SIZE authorization tag, which uses a tag ID value of 3.
+	TagBlockMode                   = 4   // Corresponds to the Tag::BLOCK_MODE authorization tag, which uses a tag ID value of 4.
 	TagDigest                      = 5   // Corresponds to the Tag::DIGEST authorization tag, which uses a tag ID value of 5.
 	TagPadding                     = 6   // Corresponds to the Tag::PADDING authorization tag, which uses a tag ID value of 6.
 	TagEcCurve                     = 10  // Corresponds to the Tag::EC_CURVE authorization tag, which uses a tag ID value of 10. // The set of parameters used to generate an elliptic curve (EC) key pair, which uses ECDSA for signing and verification, within the Android system keystore.
+	TagMlDsaVariant                = 11  // Corresponds to the Tag::ML_DSA_VARIANT authorization tag, which uses a tag ID value of 11.
 	TagRsaPublicExponent           = 200 // Corresponds to the Tag::RSA_PUBLIC_EXPONENT authorization tag, which uses a tag ID value of 200.
 	TagMgfDigest                   = 203 // Present only in key attestation version >= 100. // Corresponds to the Tag::RSA_OAEP_MGF_DIGEST KeyMint authorization tag, which uses a tag ID value of 203.
 	TagRollbackResistance          = 303 // Present only in key attestation version >= 3. // Corresponds to the Tag::ROLLBACK_RESISTANT authorization tag, which uses a tag ID value of 303.
@@ -44,6 +46,8 @@ const (
 	TagVendorPatchLevel            = 718 // Present only in key attestation versions >= 3. // Corresponds to the Tag::VENDOR_PATCHLEVEL authorization tag, which uses a tag ID value of 718. // Specifies the vendor image security patch level that must be installed on the device for this key to be used. The value appears in the form YYYYMMDD, representing the date of the vendor security patch. For example, if a key were generated on an Android device with the vendor's August 1, 2018 security patch installed, this value would be 20180801.
 	TagBootPatchLevel              = 719 // Present only in key attestation versions >= 3. // Corresponds to the Tag::BOOT_PATCHLEVEL authorization tag, which uses a tag ID value of 719. // Specifies the kernel image security patch level that must be installed on the device for this key to be used. The value appears in the form YYYYMMDD, representing the date of the system security patch. For example, if a key were generated on an Android device with the system's August 5, 2018 security patch installed, this value would be 20180805.
 	TagDeviceUniqueAttestation     = 720 // Present only in key attestation versions >= 4. // Corresponds to the Tag::DEVICE_UNIQUE_ATTESTATION authorization tag, which uses a tag ID value of 720.
+	TagAttestationIdSecondImei     = 723 // Present only in key attestation versions >= 300. // Corresponds to the Tag::ATTESTATION_ID_SECOND_IMEI authorization tag, which uses a tag ID value of 723.
+	TagModuleHash                  = 724 // Present only in key attestation versions >= 400. // Corresponds to the Tag::MODULE_HASH authorization tag, which uses a tag ID value of 724.
 )
 
 // RootOfTrust
